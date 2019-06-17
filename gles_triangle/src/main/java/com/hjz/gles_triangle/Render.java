@@ -8,6 +8,8 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
@@ -16,6 +18,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class Render extends GLES30 implements GLSurfaceView.Renderer {
+    private static final String TAG = "huanjinzi";
     private Context context;
     float[] vertex = {
             -0.5f, -0.5f, 0.0f,
@@ -23,35 +26,18 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
             0.0f, 0.5f, 0.0f,
     };
 
-    FloatBuffer vertexBuffer = FloatBuffer.wrap(vertex);
+    FloatBuffer vertexBuffer = ByteBuffer.allocateDirect(vertex.length*4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .put(vertex);
 
     public Render(Context context) {
         this.context = context;
     }
 
-    int vbo;
     int program;
-    int vao;
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        glClearColor(1.0f,1.0f,0.0f,0.0f);
-
-        int[] b = new int[1];
-        glGenBuffers(1,b,0);
-        vbo = b[0];
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        vertexBuffer.position(0);
-        glBufferData(GL_ARRAY_BUFFER,vertexBuffer.limit(),vertexBuffer,GL_STATIC_DRAW);
-
-        glGenVertexArrays(1, b, 0);
-        vao = b[0];
-
-        glBindVertexArray(vao);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3, 0);
-
-
-
         int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, ShaderUtils.getShaderString(context, R.raw.vertex));
         glCompileShader(vertexShader);
@@ -59,7 +45,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         IntBuffer params = IntBuffer.allocate(100);
         glGetShaderiv(vertexShader,GL_COMPILE_STATUS,params);
         String log = glGetShaderInfoLog(vertexShader);
-        Log.d("huanjinzi", log);
+        Log.d(TAG, log);
 
         int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragmentShader, ShaderUtils.getShaderString(context, R.raw.fragment));
@@ -67,7 +53,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
         glGetShaderiv(fragmentShader,GL_COMPILE_STATUS,params);
         log = glGetShaderInfoLog(fragmentShader);
-        Log.d("huanjinzi", log);
+        Log.d(TAG, log);
 
         program = glCreateProgram();
         glAttachShader(program, vertexShader);
@@ -76,7 +62,6 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
-
     }
 
     @Override
@@ -87,10 +72,16 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+
         glUseProgram(program);
-        glBindVertexArray(vao);
+        vertexBuffer.position(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 12, vertexBuffer);
+        glEnableVertexAttribArray(0);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
     }
 
     public void onPause(){
