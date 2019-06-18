@@ -3,10 +3,7 @@ package com.hjz.gles_triangle;
 import android.content.Context;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
-import android.os.Build;
 import android.util.Log;
-
-import androidx.annotation.RequiresApi;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,14 +13,13 @@ import java.nio.IntBuffer;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-@RequiresApi(api = Build.VERSION_CODES.N)
 public class Render extends GLES30 implements GLSurfaceView.Renderer {
     private static final String TAG = "huanjinzi";
     private Context context;
     float[] vertex = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f, 0.5f, 0.0f,
+            -1f, -1f, 0.0f,
+            1f, -1f, 0.0f,
+            0.0f, 1f, 0.0f,
     };
 
     FloatBuffer vertexBuffer = ByteBuffer.allocateDirect(vertex.length*4)
@@ -38,6 +34,36 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     int program;
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        compileShader();
+        uploadVertex();
+        genVertexObject();
+        glClearColor(1.0f, 1.0f, 0.0f, 0.0f);
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        glViewport(0,0,width,1000);
+    }
+
+    int vbo;
+    int vao;
+    @Override
+    public void onDrawFrame(GL10 gl) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        glUseProgram(program);
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    public void onPause(){
+
+    }
+
+    public void onResume(){
+
+    }
+
+    private void compileShader() {
         int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, ShaderUtils.getShaderString(context, R.raw.vertex));
         glCompileShader(vertexShader);
@@ -64,31 +90,29 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         glDeleteShader(fragmentShader);
     }
 
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        glViewport(0,0,width,height);
+    private void uploadVertex(){
+        int[] b = new int[1];
+        glGenBuffers(1,b,0);
+        vbo = b[0];
+
+        vertexBuffer.rewind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertexBuffer.limit() * 4, vertexBuffer, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER,0);
     }
 
-    @Override
-    public void onDrawFrame(GL10 gl) {
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDisable(GL_BLEND);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_SCISSOR_TEST);
-        glDisable(GL_POLYGON_OFFSET_FILL);
+    private void genVertexObject() {
+        int[] b = new int[1];
+        glGenVertexArrays(1, b, 0);
+        vao = b[0];
 
-        glUseProgram(program);
-        vertexBuffer.position(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 12, vertexBuffer);
+        vertexBuffer.rewind();
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 12, 0);
         glEnableVertexAttribArray(0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-    }
-
-    public void onPause(){
-
-    }
-
-    public void onResume(){
-
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 }
