@@ -58,7 +58,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         uploadVertex();
         uploadTexture();
         genVertexObject();
-        glClearColor(1.0f, 1.0f, 0.0f, 0.0f);
+        //glClearColor(1f, 1f, 1f, 0f);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         glClear(GL_COLOR_BUFFER_BIT);
-        glViewport((w - widths[index]) / 2 , (h - heights[index]) / 2, widths[index], heights[index]);
+        glViewport((int) ((w - widths[index] * 1.4) / 2), (int) ((h - heights[index] * 1.4) / 2), (int) (widths[index]*1.4), (int) (heights[index]*1.4));
         glUseProgram(program);
         glBindTexture(GL_TEXTURE_2D, textures[index]);
         glBindVertexArray(vao);

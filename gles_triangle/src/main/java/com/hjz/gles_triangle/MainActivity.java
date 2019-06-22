@@ -2,9 +2,12 @@ package com.hjz.gles_triangle;
 
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,6 +18,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         if (glSurfaceView == null) {
             DisplayMetrics dm = getResources().getDisplayMetrics();
             glSurfaceView = new GLSurfaceView(this);
@@ -30,8 +36,18 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+//        if (savedInstanceState != null) {
+//            render.number = savedInstanceState.getInt("index");
+//        }
         setContentView(glSurfaceView);
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+//        outState.putInt("index", (int) render.number);
+        super.onSaveInstanceState(outState, outPersistentState);
     }
 
     @Override
@@ -46,5 +62,15 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         glSurfaceView.onResume();
         render.onResume();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 }
