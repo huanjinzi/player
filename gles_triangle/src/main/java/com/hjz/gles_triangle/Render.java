@@ -21,9 +21,18 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     private static final String TAG = "huanjinzi";
     private Context context;
     float[] vertex = {
-            -1f, -1f, 0.0f, 0f, 0f,
-            1f, -1f, 0.0f, 1f, 0f,
-            0f, 1f, 0.0f, 0.5f, 1f
+            // in picture,(0,0) start at left-top
+            // in texture,(0,0) start at left-bottom
+            // so,we inverse the y(0 -> 1,1 -> 0)
+            -1f, -1f, 0.0f, 0f, 1f,
+            1f, -1f, 0.0f, 1f, 1f,
+            1f, 1f, 0.0f, 1f, 0f,
+            -1f, 1f, 0.0f, 0f, 0f
+    };
+
+    int[] indices = new int[]{
+            0,1,2,
+            0,2,3
     };
 
     FloatBuffer vertexBuffer = ByteBuffer.allocateDirect(vertex.length * 4)
@@ -31,11 +40,17 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
             .asFloatBuffer()
             .put(vertex);
 
+    IntBuffer indexBuffer = ByteBuffer.allocateDirect(indices.length * 4)
+            .order(ByteOrder.nativeOrder())
+            .asIntBuffer()
+            .put(indices);
+
     public Render(Context context) {
         this.context = context;
     }
 
     int program;
+    int index = 0;
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -48,19 +63,22 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        glViewport((width - this.width) /2 , (height - this.height) / 2, this.width, this.height);
+        w = width;
+        h = height;
     }
 
     int vbo;
+    int ebo;
     int vao;
 
     @Override
     public void onDrawFrame(GL10 gl) {
         glClear(GL_COLOR_BUFFER_BIT);
+        glViewport((w - widths[index]) / 2 , (h - heights[index]) / 2, widths[index], heights[index]);
         glUseProgram(program);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glBindTexture(GL_TEXTURE_2D, textures[index]);
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,0);
     }
 
     public void onPause() {
@@ -69,6 +87,12 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
     public void onResume() {
 
+    }
+
+    long number;
+    public void onClick() {
+        number++;
+        index = (int) (number % 6);
     }
 
     private void compileShader() {
@@ -99,14 +123,20 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     }
 
     private void uploadVertex() {
-        int[] b = new int[1];
-        glGenBuffers(1, b, 0);
+        int[] b = new int[2];
+        glGenBuffers(2, b, 0);
         vbo = b[0];
+        ebo = b[1];
 
         vertexBuffer.rewind();
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertexBuffer.limit() * 4, vertexBuffer, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        indexBuffer.rewind();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,indexBuffer.limit() * 4,indexBuffer,GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
     }
 
     private void genVertexObject() {
@@ -115,7 +145,9 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         vao = b[0];
 
         vertexBuffer.rewind();
+        indexBuffer.rewind();
         glBindVertexArray(vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,ebo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, false, 20, 0);
@@ -127,31 +159,48 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         glBindVertexArray(0);
     }
 
-    int texture;
-    int width;
-    int height;
+    int[] textures;
+    int[] widths;
+    int[] heights;
+
+    int w;
+    int h;
 
     private void uploadTexture() {
-        int[] t = new int[1];
-        glGenTextures(1, t, 0);
-        texture = t[0];
+        textures = new int[6];
+        widths = new int[6];
+        heights = new int[6];
 
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glGenTextures(6, textures, 0);
 
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inScaled = false;
-        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.raw.dujuan4, options);
-        width = bitmap.getWidth();
-        height = bitmap.getHeight();
-        GLUtils.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap, 0);
+        int[] images = {
+                R.raw.dujuan,
+                R.raw.dujuan2,
+                R.raw.dujuan3,
+                R.raw.dujuan4,
+                R.raw.dujuan5,
+                R.raw.dujuan7,
+        };
 
-        glBindTexture(GL_TEXTURE_2D, 0);
-        bitmap.recycle();
+        int i = 0;
+        for (int texture:textures) {
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            // set texture filtering parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), images[i], options);
+            widths[i] = bitmap.getWidth();
+            heights[i] = bitmap.getHeight();
+            GLUtils.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap, 0);
+
+            glBindTexture(GL_TEXTURE_2D, 0);
+            bitmap.recycle();
+            i ++;
+        }
     }
 }

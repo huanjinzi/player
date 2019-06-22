@@ -3,6 +3,7 @@ package com.hjz.gles_triangle;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,13 +15,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        DisplayMetrics dm = getResources().getDisplayMetrics();
-        glSurfaceView = new GLSurfaceView(this);
-        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(dm.widthPixels, dm.heightPixels);
-        glSurfaceView.setLayoutParams(params);
-        glSurfaceView.setEGLContextClientVersion(3);
-        render = new Render(this);
-        glSurfaceView.setRenderer(render);
+        if (glSurfaceView == null) {
+            DisplayMetrics dm = getResources().getDisplayMetrics();
+            glSurfaceView = new GLSurfaceView(this);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(dm.widthPixels, dm.heightPixels);
+            glSurfaceView.setLayoutParams(params);
+            glSurfaceView.setEGLContextClientVersion(3);
+            render = new Render(this);
+            glSurfaceView.setRenderer(render);
+            glSurfaceView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    render.onClick();
+                }
+            });
+        }
         setContentView(glSurfaceView);
 
     }

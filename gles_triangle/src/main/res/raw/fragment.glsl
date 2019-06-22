@@ -4,7 +4,7 @@
 out vec4 color;
 in vec2 texCoord;
 
-uniform sampler2D texPic;
+uniform sampler2D texPic;// texture unit 0,default active
 void main()
 {
     color = texture(texPic,texCoord);
