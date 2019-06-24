@@ -92,6 +92,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
         rotate.rewind();
         int location = glGetUniformLocation(program, "transform");
+        // need after use program.
         glUniformMatrix4fv(location,1,false,rotate);
 
         glBindTexture(GL_TEXTURE_2D, textures[index]);
