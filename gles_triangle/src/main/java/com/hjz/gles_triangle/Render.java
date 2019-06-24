@@ -3,9 +3,11 @@ package com.hjz.gles_triangle;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
+import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import java.io.InputStream;
@@ -13,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -52,13 +55,21 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     int program;
     int index = 0;
 
+    Matrix4f matrix4f = new Matrix4f();
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         compileShader();
         uploadVertex();
         uploadTexture();
         genVertexObject();
-        //glClearColor(1f, 1f, 1f, 0f);
+
+        matrix4f.loadIdentity();
+        matrix4f.rotate(10f, 0f, 0f, 1f);
+
+        rotate =  ByteBuffer.allocateDirect(matrix4f.getArray().length * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+                .put(matrix4f.getArray());
     }
 
     @Override
@@ -70,12 +81,18 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     int vbo;
     int ebo;
     int vao;
+    FloatBuffer rotate;
 
     @Override
     public void onDrawFrame(GL10 gl) {
         glClear(GL_COLOR_BUFFER_BIT);
-        glViewport((int) ((w - widths[index] * 1.4) / 2), (int) ((h - heights[index] * 1.4) / 2), (int) (widths[index]*1.4), (int) (heights[index]*1.4));
+        glViewport(((w - widths[index]) / 2), ((h - heights[index]) / 2), (widths[index]), (heights[index]));
         glUseProgram(program);
+
+        rotate.rewind();
+        int location = glGetUniformLocation(program, "transform");
+        glUniformMatrix4fv(location,1,false,rotate);
+
         glBindTexture(GL_TEXTURE_2D, textures[index]);
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,0);
