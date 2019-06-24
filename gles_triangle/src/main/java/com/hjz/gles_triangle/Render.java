@@ -65,6 +65,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
         matrix4f.loadIdentity();
         matrix4f.rotate(10f, 0f, 0f, 1f);
+        matrix4f.translate(0.3f,0f,0f);
 
         rotate =  ByteBuffer.allocateDirect(matrix4f.getArray().length * 4)
                 .order(ByteOrder.nativeOrder())
