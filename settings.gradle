@@ -1,1 +1,1 @@
-include ':app', ':gles_triangle', ':base'
+include ':app', ':gles_triangle', ':base', ':cube'

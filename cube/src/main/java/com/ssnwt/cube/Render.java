@@ -16,9 +16,9 @@ import javax.microedition.khronos.opengles.GL10;
 public class Render extends GLES30 implements GLSurfaceView.Renderer {
     private Context context;
     float[] vertex = {
-            -0.5f,-0.5f,0.0f,
-            0.5f,-0.5f,0.0f,
-            0f,0.5f,0.0f,
+            -1f,-1f,0.0f, 1.0f,0f,0f,
+            1f,-1f,0.0f, 0.0f,1.0f,0f,
+            0f,1f,0.0f, 0.0f,0.0f,1.0f,
     };
 
     public Render(Context context) {
@@ -36,7 +36,6 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        glClearColor(1.0f, 0.0f, 0.0f,0.0f);
         compileProgram();
         uploadVertex();
         genVertexArrayObject();
@@ -46,9 +45,9 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         glViewport(0, 0, width, height);
         float ratio = (float) width / height;
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio * 2, ratio * 2, -2, 2, 2, 7);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio * 2, ratio * 2, -2f, 2f, 2, 11);
         Matrix.setLookAtM(mViewMatrix,0,
-                0f,0f,4f,
+                0f,0f,3,
                 0f,0f,0f,
                 0f,1f,0f
         );
@@ -91,8 +90,10 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
 
         //config vertex pointer
         vertexBuffer.rewind();
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 12, 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 24, 0);
         glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 24, 12);
+        glEnableVertexAttribArray(1);
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
