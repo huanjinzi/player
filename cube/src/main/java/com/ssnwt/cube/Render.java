@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -65,12 +66,12 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
             -1f,-1f,-1f,0f,0f,1f,   0f,1f,      //6
 
             1f,-1f,1f,  1f,1f,0f,   1f,0f,      //3
-            1f,-1f,-1f, 1f,1f,0f,   1f,0f,      //7
-            -1f,-1f,-1f,0f,0f,1f,   0f,0f,      //6
+            1f,-1f,-1f, 1f,1f,0f,   1f,1f,      //7
+            -1f,-1f,-1f,0f,0f,1f,   0f,1f,      //6
 
             1f,-1f,1f,  1f,1f,0f,   1f,0f,      //3
             -1f,-1f,1f, 0f,0f,1f,   0f,0f,      //2
-            -1f,-1f,-1f,0f,0f,1f,   0f,0f,      //6
+            -1f,-1f,-1f,0f,0f,1f,   0f,1f,      //6
 
             -1f,1f,1f,  1f,0f,0f,   0f,1f,      //0
             -1f,1f,-1f, 1f,0f,0f,   0f,0f,      //4
@@ -137,9 +138,9 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         glViewport(0, 0, width, height);
         float ratio = (float) width / height;
-        Matrix.frustumM(mProjectionMatrix, 0, -ratio * 2, ratio * 2, -2f, 2f, 2, 7);
+        Matrix.frustumM(mProjectionMatrix, 0, -ratio * 1.5f, ratio * 1.5f, -1.5f, 1.5f, 2, 8);
         Matrix.setLookAtM(mViewMatrix,0,
-                0f,3f,4,
+                0f,-3f,6,
                 0f,0f,0f,
                 0f,1f,0f
         );
@@ -149,14 +150,36 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     int vbo;
     int ebo;
     int vao;
+    Random random = new Random();
+    boolean change = false;
+    int t = -1;
+    int lastT = 50;
     @Override
     public void onDrawFrame(GL10 gl) {
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
-        glClearDepthf(4f);
+        glClearDepthf(1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(program);
-        Matrix.rotateM(mViewMatrix, 0, 0.5f, 0, 1, 0);
+
+        if (t == -1) {
+            change = random.nextBoolean();
+            lastT = 50 + random.nextInt(50);
+        }
+
+
+        if (change) {
+            Matrix.rotateM(mViewMatrix, 0, 0.5f, 0, 1, 0);
+        } else {
+            Matrix.rotateM(mViewMatrix, 0, 0.5f, 1, 0, 0);
+        }
+
+        t++;
+
+        if (t == lastT) {
+            t = -1;
+        }
+
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix,0);
         int location = glGetUniformLocation(program, "transform");
 
