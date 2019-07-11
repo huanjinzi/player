@@ -1,11 +1,13 @@
 package com.ssnwt.cube;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
-import android.view.Choreographer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -18,36 +20,86 @@ import javax.microedition.khronos.opengles.GL10;
 public class Render extends GLES30 implements GLSurfaceView.Renderer {
     private Context context;
     float[] vertex = {
-            -1f,1f,1f, 1.0f,0f,0f,//0
-            1f,1f,1f, 0.0f,1.0f,0f,//1
-            -1f,-1f,1f, 0.0f,0.0f,1.0f,//2
-            1f,-1f,1f, 1.0f,1f,0f,//3
+            -1f,1f,1f,  1f,0f,0f,   0f,0f,      //0
+            1f,1f,1f,   0f,1f,0f,   1f,0f,      //1
+            -1f,-1f,1f, 0f,0f,1f,   0f,1f,      //2
+            1f,-1f,1f,  1f,1f,0f,   1f,1f,      //3
 
-            -1f,-1f,-1f, 1.0f,0f,0f,//4
-            1f,-1f,-1f, 0.0f,1.0f,0f,//5
-            1f,1f,-1f, 0.0f,0.0f,1.0f,//6
-            -1f,1f,-1f, 1.0f,1f,0f,//7
+            -1f,1f,-1f, 1f,0f,0f,   0f,0f,      //4
+            1f,1f,-1f,  0f,1f,0f,   1f,0f,      //5
+            -1f,-1f,-1f,0f,0f,1f,   0f,1f,      //6
+            1f,-1f,-1f, 1f,1f,0f,   1f,1f       //7
+    };
+
+    float[] vertexs = {
+            -1f,1f,1f,  1f,0f,0f,   0f,0f,      //0
+            1f,1f,1f,   0f,1f,0f,   1f,0f,      //1
+            1f,-1f,1f,  1f,1f,0f,   1f,1f,      //3
+
+            -1f,1f,1f,  1f,0f,0f,   0f,0f,      //0
+            -1f,-1f,1f, 0f,0f,1f,   0f,1f,      //2
+            1f,-1f,1f,  1f,1f,0f,   1f,1f,      //3
+
+            1f,-1f,1f,  1f,1f,0f,   0f,1f,      //3
+            1f,1f,1f,   0f,1f,0f,   0f,0f,      //1
+            1f,1f,-1f,  0f,1f,0f,   1f,0f,      //5
+
+            1f,-1f,1f,  1f,1f,0f,   0f,1f,      //3
+            1f,-1f,-1f, 1f,1f,0f,   1f,1f,      //7
+            1f,1f,-1f,  0f,1f,0f,   1f,0f,      //5
+
+            1f,1f,-1f,  0f,1f,0f,   0f,0f,      //5
+            -1f,1f,-1f, 1f,0f,0f,   1f,0f,      //4
+            -1f,-1f,-1f,0f,0f,1f,   1f,1f,      //6
+
+            1f,1f,-1f,  0f,1f,0f,   0f,0f,      //5
+            1f,-1f,-1f, 1f,1f,0f,   0f,1f,      //7
+            -1f,-1f,-1f,0f,0f,1f,   1f,1f,      //6
+
+            -1f,1f,1f,  1f,0f,0f,   1f,0f,      //0
+            -1f,-1f,1f, 0f,0f,1f,   1f,1f,      //2
+            -1f,-1f,-1f,0f,0f,1f,   0f,1f,      //6
+
+            -1f,1f,1f,  1f,0f,0f,   1f,0f,      //0
+            -1f,1f,-1f, 1f,0f,0f,   0f,0f,      //4
+            -1f,-1f,-1f,0f,0f,1f,   0f,1f,      //6
+
+            1f,-1f,1f,  1f,1f,0f,   1f,0f,      //3
+            1f,-1f,-1f, 1f,1f,0f,   1f,0f,      //7
+            -1f,-1f,-1f,0f,0f,1f,   0f,0f,      //6
+
+            1f,-1f,1f,  1f,1f,0f,   1f,0f,      //3
+            -1f,-1f,1f, 0f,0f,1f,   0f,0f,      //2
+            -1f,-1f,-1f,0f,0f,1f,   0f,0f,      //6
+
+            -1f,1f,1f,  1f,0f,0f,   0f,1f,      //0
+            -1f,1f,-1f, 1f,0f,0f,   0f,0f,      //4
+            1f,1f,-1f,  0f,1f,0f,   1f,0f,      //5
+
+            -1f,1f,1f,  1f,0f,0f,   0f,1f,      //0
+            1f,1f,1f, 1f,0f,0f,     1f,1f,      //1
+            1f,1f,-1f,  0f,1f,0f,   1f,0f,      //5
     };
 
     int[] index = {
             // front
-            0, 1, 2,
-            2, 3, 0,
+            0, 1, 3,
+            0, 2, 3,
             // right
-            1, 5, 6,
-            6, 2, 1,
+            3, 1, 5,
+            3, 7, 5,
             // back
-            7, 6, 5,
-            5, 4, 7,
+            5, 4, 6,
+            5, 7, 6,
             // left
-            4, 0, 3,
-            3, 7, 4,
+            0, 2, 6,
+            0, 4, 6,
             // bottom
-            4, 5, 1,
-            1, 0, 4,
-            // top
             3, 2, 6,
-            6, 7, 3
+            3, 7, 6,
+            // top
+            0, 1, 5,
+            0, 4, 5
     };
 
     public Render(Context context) {
@@ -58,6 +110,11 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
             .put(vertex);
+
+    FloatBuffer vertexsBuffer = ByteBuffer.allocateDirect(vertexs.length * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .put(vertexs);
 
     IntBuffer indexBuffer = ByteBuffer.allocateDirect(index.length * 4)
             .order(ByteOrder.nativeOrder())
@@ -71,13 +128,8 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         compileProgram();
-        Choreographer.getInstance().postFrameCallback(new Choreographer.FrameCallback() {
-            @Override
-            public void doFrame(long frameTimeNanos) {
-
-            }
-        });
         uploadVertex();
+        uploadTexture();
         genVertexArrayObject();
     }
 
@@ -99,14 +151,40 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
     int vao;
     @Override
     public void onDrawFrame(GL10 gl) {
-        glClear(GL_COLOR_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glClearDepthf(4f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(program);
         Matrix.rotateM(mViewMatrix, 0, 0.5f, 0, 1, 0);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix,0);
         int location = glGetUniformLocation(program, "transform");
+
         glUniformMatrix4fv(location, 1, false, mMVPMatrix, 0);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, index.length, GL_UNSIGNED_INT, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+
+    int texture;
+    private void uploadTexture() {
+        int[] b = new int[1];
+        glGenTextures(1, b, 0);
+        texture = b[0];
+
+        glBindTexture(GL_TEXTURE_2D,texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        // set texture filtering parameters
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.raw.dujuan7, options);
+        GLUtils.texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        bitmap.recycle();
     }
 
     private void uploadVertex() {
@@ -115,9 +193,9 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         vbo = b[0];
         ebo = b[1];
 
-        vertexBuffer.rewind();
+        vertexsBuffer.rewind();
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertexBuffer.limit() * 4, vertexBuffer, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, vertexsBuffer.limit() * 4, vertexsBuffer, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         indexBuffer.rewind();
@@ -135,12 +213,14 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
         //config vertex pointer
-        vertexBuffer.rewind();
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 24, 0);
+        vertexsBuffer.rewind();
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 8 * 4, 0);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, 24, 12);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, 8 * 4, 3 * 4);
         glEnableVertexAttribArray(1);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glVertexAttribPointer(2, 2, GL_FLOAT, false, 8 * 4, 6 * 4);
+        glEnableVertexAttribArray(2);
+        //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
