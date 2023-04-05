@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
+import android.opengl.Matrix;
 import android.util.Log;
 
 import java.io.InputStream;
@@ -58,7 +59,7 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         uploadVertex();
         uploadTexture();
         genVertexObject();
-        //glClearColor(1f, 1f, 1f, 0f);
+        glClearColor(1f, 1f, 1f, 0f);
     }
 
     @Override
@@ -103,15 +104,16 @@ public class Render extends GLES30 implements GLSurfaceView.Renderer {
         IntBuffer params = IntBuffer.allocate(100);
         glGetShaderiv(vertexShader, GL_COMPILE_STATUS, params);
         String log = glGetShaderInfoLog(vertexShader);
-        Log.d(TAG, log);
+        Log.d(TAG, "log1:" + log);
 
         int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragmentShader, ShaderUtils.getShaderString(context, R.raw.fragment));
         glCompileShader(fragmentShader);
+        int error = glGetError();
 
         glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, params);
         log = glGetShaderInfoLog(fragmentShader);
-        Log.d(TAG, log);
+        Log.d(TAG, "log2:" + log + ",error:" + error);
 
         program = glCreateProgram();
         glAttachShader(program, vertexShader);
