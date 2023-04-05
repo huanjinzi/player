@@ -1,1 +1,1 @@
-include ':gles_triangle'
+include ':gles_triangle', ':cube'
